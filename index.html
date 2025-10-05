@@ -370,7 +370,7 @@
   <div class="container is-max-desktop">
     <div class="columns is-centered">
       <div class="column">
-        <h2 class="title is-3">Overview</h2>
+        <h2 class="title is-3">Insight</h2>
         <hr>
         
         <div class="content-box">
@@ -436,11 +436,60 @@
   </div>
 </section>
 
+
+
+
+<section class="section">
+  <div class="container is-max-desktop">
+      <div class="columns is-centered">
+          <div class="column">
+              <h2 class="title is-3">Why Existing PLMs Fail for Log-based Fault Diagnosis</h2>
+              <hr>
+              <div class="content-box">
+                  <p class="has-text-justified">
+                      Pre-trained Language Models (PLMs) are trained on natural language and excel at semantic understanding. However, they overlook the unique multi-level structure of system logs. This leads to an inability to capture crucial fault-related patterns, resulting in suboptimal performance in diagnosis tasks. Our empirical study highlights three key failures:
+                  </p>
+                  <div class="error-box">
+                    <strong>Key Failure Points of Standard PLMs:</strong>
+                    <ol style="margin: 1rem 0 0 2rem;">
+                        <li>An inability to identify unexpected execution flows.</li>
+                        <li>Insensitivity to anomalous system events.</li>
+                        <li>A failure to separate different system components.</li>
+                    </ol>
+                  </div>
+
+                  <figure>
+                      <img src="./static/images/baseline_sim.png" alt="Baseline Similarity Plot" style="width: 100%;">
+                      <figcaption>
+                          <strong>1. Failure to Identify Unexpected Flows:</strong> As shown in the table, existing PLMs consider unexpected execution flows to have a high similarity to historical ones (e.g., 88.10% Avg_Sim), indicating they cannot effectively distinguish anomalies from normal behavior.
+                      </figcaption>
+                  </figure>
+                  <hr>
+                  <div class="columns is-vcentered">
+                      <div class="column">
+                         <img src="./static/images/bert_event.png" alt="BERT Event Visualization">
+                         <img src="./static/images/bart_event.png" alt="BART Event Visualization">
+                      </div>
+                      <div class="column">
+                         <img src="./static/images/bert_component.png" alt="BERT Component Visualization">
+                         <img src="./static/images/bart_component.png" alt="BART Component Visualization">
+                      </div>
+                  </div>
+                  <figcaption>
+                      <strong>2 & 3. Failure to Discriminate Events and Components:</strong> These t-SNE plots show log representations from BERT-Base and BART-Base. On the left, normal logs (cyan) and anomalous root-cause logs (red/purple) are heavily mixed. On the right, logs from different system components are stacked together. This demonstrates that standard PLMs cannot separate these crucial fault signals in their representation space.
+                  </figcaption>
+              </div>
+          </div>
+      </div>
+  </div>
+</section>
+
+
 <section class="section">
   <div class="container is-max-desktop">
     <div class="columns is-centered">
       <div class="column">
-        <h2 class="title is-3">Method: Learning Fallibility Representations with Bifrost</h2>
+        <h2 class="title is-3">Method: Learning Fallibility Representations in System Logs</h2>
         <hr>
         
         <div class="content-box">
@@ -468,50 +517,7 @@
   </div>
 </section>
 
-<section class="section">
-    <div class="container is-max-desktop">
-        <div class="columns is-centered">
-            <div class="column">
-                <h2 class="title is-3">Why Existing PLMs Fail for Log Analysis</h2>
-                <hr>
-                <div class="content-box">
-                    <p class="has-text-justified">
-                        Pre-trained Language Models (PLMs) are trained on natural language and excel at semantic understanding. However, they overlook the unique multi-level structure of system logs. This leads to an inability to capture crucial fault-related patterns, resulting in suboptimal performance in diagnosis tasks. Our empirical study highlights three key failures:
-                    </p>
-                    <div class="error-box">
-                      <strong>Key Failure Points of Standard PLMs:</strong>
-                      <ol style="margin: 1rem 0 0 2rem;">
-                          <li>An inability to identify unexpected execution flows.</li>
-                          <li>Insensitivity to anomalous system events.</li>
-                          <li>A failure to separate different system components.</li>
-                      </ol>
-                    </div>
 
-                    <figure>
-                        <img src="./static/images/baseline_sim.png" alt="Baseline Similarity Plot" style="width: 100%;">
-                        <figcaption>
-                            <strong>1. Failure to Identify Unexpected Flows:</strong> As shown in the table, existing PLMs consider unexpected execution flows to have a high similarity to historical ones (e.g., 88.10% Avg_Sim), indicating they cannot effectively distinguish anomalies from normal behavior.
-                        </figcaption>
-                    </figure>
-                    <hr>
-                    <div class="columns is-vcentered">
-                        <div class="column">
-                           <img src="./static/images/bert_event.png" alt="BERT Event Visualization">
-                           <img src="./static/images/bart_event.png" alt="BART Event Visualization">
-                        </div>
-                        <div class="column">
-                           <img src="./static/images/bert_component.png" alt="BERT Component Visualization">
-                           <img src="./static/images/bart_component.png" alt="BART Component Visualization">
-                        </div>
-                    </div>
-                    <figcaption>
-                        <strong>2 & 3. Failure to Discriminate Events and Components:</strong> These t-SNE plots show log representations from BERT-Base and BART-Base. On the left, normal logs (cyan) and anomalous root-cause logs (red/purple) are heavily mixed. On the right, logs from different system components are stacked together. This demonstrates that standard PLMs cannot separate these crucial fault signals in their representation space.
-                    </figcaption>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
 
 <section class="section">
   <div class="container is-max-desktop">
