@@ -13,6 +13,11 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
   <link rel="icon" href="./static/images/ca2.png">
 
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0KOVEMeawgUFyDsFRpvvTJuQYLqtUvIcsvEczaMUtMwvWNCHJBTjF" crossorigin="anonymous">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0i8" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURPl3xCuPvnHNbBALuZSFoqyno4Kscs/KkFxGLRPOrAI2U2pyLCsCk" crossorigin="anonymous" onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}, {left: '\\(', right: '\\)', display: false}, {left: '\\[', right: '\\]', display: true}], throwOnError: false});"></script>
+
+
   <style>
     :root {
       --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -37,9 +42,7 @@
       background: #ffffff;
     }
 
-    /* Hero Section */
     .hero {
-      /* 修改：将背景图片替换为 pipeline.png */
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)), 
               url("./static/images/background.png"); 
       background-size: cover;
@@ -74,7 +77,6 @@
       line-height: 1.2;
       margin-bottom: 1.5rem;
       text-shadow: 0 2px 12px rgba(0,0,0,0.15);
-      /* 为标题添加背景以提高可读性 */
       background: rgba(255, 255, 255, 0.6);
       backdrop-filter: blur(5px);
       padding: 1rem;
@@ -524,8 +526,110 @@
   </div>
 </section>
 
+<section class="section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3">Theoretical Analysis: The Fallibility Jitter Problem</h2>
+    <hr>
+    
+    <div class="tabs is-centered is-boxed" id="theory-tabs">
+      <ul>
+        <li class="is-active" data-tab="jitter-problem"><a>The Fallibility Jitter Problem</a></li>
+        <li data-tab="sgd-analysis"><a>Analysis with SGD Optimizer</a></li>
+        <li data-tab="adam-analysis"><a>Analysis with Adam Optimizer</a></li>
+        <li data-tab="carl-analysis"><a>CARL Strategy Analysis</a></li>
+      </ul>
+    </div>
 
+    <div class="tab-content is-active" id="jitter-problem">
+      <div class="content-box">
+        <h3 class="title is-4">Identifying the Root Cause of Instability</h3>
+        <div class="content has-text-justified">
+            <p>
+                A key theoretical contribution of our work is the identification of <strong>Fallibility Jitter</strong>. This problem refers to the instability in the model's training process caused by the inherent randomness of jointly optimizing our learning objectives. In each training step, we randomly sample context logs (for EFP) and system components (for SCP). This stochastic sampling causes the calculated gradient $g_{Vanilla}$ to deviate from the "true" gradient $G_{Vanilla}$, making the optimization path noisy and unstable.
+            </p>
+            <p>
+                We quantify this deviation using the Gradient Variance, defined as the expected squared norm of the difference between the stochastic and true gradients:
+                $$ \sigma_{Vanilla}^{2}(W;l_{t})=\mathbb{E}_{\xi}[||g_{Vanilla}(W;l_{t},\xi)-G_{Vanilla}(W;l_{t})||^{2}] $$
+            </p>
+            <p>
+                Since the sampling processes are independent, this total variance can be decomposed into the sum of variances from each random source (context log sampling for EFP and component sampling for SCP):
+                $$ \sigma_{Vanilla}^{2}(W;l_{t})=\text{Var}_{l_{i}\sim \text{Uniform}(x_{t})}(g_{EFP}(W;l_{t},l_{i})) +\text{Var}_{c_{j}\sim \text{Uniform}(C)}(g_{SCP}(W;l_{t},c_{j})) $$
+            </p>
+            <p>
+                This jitter ultimately prevents the model from converging to an ideal representation space, highlighting the need for a robust learning strategy.
+            </p>
+        </div>
+      </div>
+    </div>
 
+    <div class="tab-content" id="sgd-analysis">
+      <div class="content-box">
+        <h3 class="title is-4">Impact on Stochastic Gradient Descent (SGD)</h3>
+        <div class="content has-text-justified">
+          <p>
+            When using a standard SGD optimizer, the fallibility jitter has a compounding effect on the model's weights. Our analysis derives an upper bound for the cumulative weight error ($E_K = W_K - W_K'$) after $K$ training steps, where $W_K$ is the ideal weight trajectory and $W_K'$ is the stochastic trajectory.
+          </p>
+          <p>
+             The final bound on the expected weight error is:
+             $$ \mathbb{E}[||E_{K}||]\le\eta\sum_{k=0}^{K-1}(1+\eta L)^{K-1-k}\mathbb{E}_{W_{k}^{\prime}}[\sigma(W_{k}^{\prime};l_{k})] $$
+          </p>
+          <p>
+            This equation shows that the gradient standard deviation $\sigma$ (the root of the variance, or "jitter") at each step is <strong>amplified and accumulated</strong> into the final weight error. The term $(1+\eta L)^{K-1-k}$ acts as an amplification factor. This means that small, single-step deviations caused by random sampling do not average out but instead build up over time, leading to a significant divergence between the model's actual parameters and the ideal parameters.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="adam-analysis">
+      <div class="content-box">
+        <h3 class="title is-4">Impact on Adam Optimizer</h3>
+        <div class="content has-text-justified">
+          <p>
+            For an adaptive optimizer like Adam, the fallibility jitter problem is more complex, as it contaminates both of its core moment estimates.
+          </p>
+          <p>
+            <strong>1. First-Moment Estimate (Momentum):</strong> The gradient noise from sampling directly introduces errors into the momentum buffer ($m_k$), causing the estimated gradient direction to be less accurate.
+          </p>
+          <p>
+            <strong>2. Second-Moment Estimate (Variance):</strong> More critically, the jitter introduces a systematic bias in the second-moment estimate ($v_k$). The expected value of the squared stochastic gradient is not equal to the squared true gradient; it is biased by the gradient variance:
+            $$ \mathbb{E}_{\xi_{k}}[g_{k}(W_{k}^{\prime})^{2}] = G_{k}(W_{k}^{\prime})^{2}+\text{diag}(\text{Var}(g_{k})) $$
+          </p>
+          <p>
+            This bias means that the optimizer consistently overestimates the variance of the gradients. This, in turn, leads to the calculation of inaccurate adaptive learning rates for each parameter, further destabilizing the training process and degrading the quality of the final representations.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="carl-analysis">
+        <div class="content-box">
+          <h3 class="title is-4">How the CARL Strategy Mitigates Jitter</h3>
+          <div class="content has-text-justified">
+            <p>
+                The <strong>Co-Anchored Fallibility Representation Learning (CARL)</strong> strategy is designed to solve the fallibility jitter problem. Our analysis shows that CARL systematically reduces weight errors through two structural mechanisms, achieving more stable and efficient learning.
+            </p>
+            <h4 class="title is-5" style="margin-top: 2rem;">1. Variance Isolation</h4>
+            <p>
+                CARL isolates the randomness introduced by sampling the context log $l_i$ into an independent, lower-weighted loss term ($\mathcal{L}_{CL}$). In the vanilla strategy, the entire EFP task depends on this random sampling. By isolating this randomness, CARL reduces its overall contribution to the total gradient variance, leading to a more stable optimization path.
+            </p>
+            <h4 class="title is-5" style="margin-top: 2rem;">2. Negative Covariance Constraint</h4>
+            <p>
+                To handle the variance from sampling system components $c_j$, CARL employs a shared negative set mechanism. This design mathematically introduces a critical <strong>negative covariance</strong> term between parts of the gradient associated with the component sampling. The total variance of the stochastic part of the gradient ($Z$) is given by:
+                $$ Var(Z) = Var(A) + Var(B) + 2Cov(A, B) $$
+            </p>
+            <p>
+                Our derivation proves that this covariance term is negative:
+                $$ Cov(A, B) = -Cov_j(g_{A,j}, g_{B,j}) < 0 $$
+            </p>
+            <p>
+                Because this covariance term is negative, it actively cancels out a portion of the variance generated by component sampling, thereby reducing the total gradient variance and stabilizing the learning process.
+            </p>
+          </div>
+        </div>
+      </div>
+
+  </div>
+</section>
 <section class="section">
   <div class="container is-max-desktop">
     <div class="columns is-centered">
@@ -533,7 +637,7 @@
         <h2 class="title is-3">Experimental Results</h2>
         <hr>
 
-        <div class="tabs is-centered is-boxed">
+        <div class="tabs is-centered is-boxed" id="results-tabs">
           <ul>
             <li class="is-active" data-tab="leaderboard"><a>Log-based Fault Diagnosis Evaluation</a></li>
             <li data-tab="qualitative"><a>Qualitative Analysis</a></li>
@@ -636,20 +740,46 @@
 
 <script>
   // Tab switching functionality
-  document.querySelectorAll('.tabs li').forEach(tab => {
-    tab.addEventListener('click', function() {
-      const targetTab = this.getAttribute('data-tab');
-      
-      document.querySelectorAll('.tabs li').forEach(t => t.classList.remove('is-active'));
-      this.classList.add('is-active');
-      
-      document.querySelectorAll('.tab-content').forEach(content => {
-        content.classList.remove('is-active');
+  function setupTabs(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) {
+      // Find the container by its direct parent section if ID is on the tabs div itself
+      const tabsDiv = document.querySelector('.tabs#' + containerId);
+      if (tabsDiv) {
+        container = tabsDiv.closest('.section').querySelector('.container');
+      } else {
+        return;
+      }
+    }
+    
+    const tabs = container.querySelectorAll('.tabs li');
+    const contents = Array.from(container.querySelectorAll('.tab-content'));
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', function() {
+        const targetId = this.getAttribute('data-tab');
+        
+        tabs.forEach(t => t.classList.remove('is-active'));
+        this.classList.add('is-active');
+        
+        contents.forEach(content => {
+          content.classList.remove('is-active');
+          if (content.id === targetId) {
+            content.classList.add('is-active');
+          }
+        });
       });
-      
-      document.getElementById(targetTab).classList.add('is-active');
     });
+  }
+
+  // Use a more robust selector for the containers of the tabs
+  document.querySelectorAll('.tabs').forEach(tabsContainer => {
+    const containerId = tabsContainer.id;
+    if(containerId) {
+        setupTabs(containerId);
+    }
   });
+
 </script>
 
 </body>
