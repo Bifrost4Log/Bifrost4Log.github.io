@@ -15,9 +15,8 @@
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0KOVEMeawgUFyDsFRpvvTJuQYLqtUvIcsvEczaMUtMwvWNCHJBTjF" crossorigin="anonymous">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0i8" crossorigin="anonymous"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURPl3xCuPvnHNbBALuZSFoqyno4Kscs/KkFxGLRPOrAI2U2pyLCsCk" crossorigin="anonymous" onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}, {left: '\\(', right: '\\)', display: false}, {left: '\\[', right: '\\]', display: true}], throwOnError: false});"></script>
-
-
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURPl3xCuPvnHNbBALuZSFoqyno4Kscs/KkFxGLRPOrAI2U2pyLCsCk" crossorigin="anonymous"></script>
+  
   <style>
     :root {
       --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -42,6 +41,7 @@
       background: #ffffff;
     }
 
+    /* Hero Section */
     .hero {
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)), 
               url("./static/images/background.png"); 
@@ -273,59 +273,6 @@
       margin: 2rem 0;
     }
     
-    /* Results Grid */
-    .results-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 2rem;
-      margin: 2rem 0;
-    }
-
-    .result-card {
-      background: white;
-      border-radius: 12px;
-      padding: 1.5rem;
-      box-shadow: var(--shadow-sm);
-      transition: all 0.3s ease;
-      text-align: center;
-    }
-
-    .result-card:hover {
-      box-shadow: var(--shadow-md);
-      transform: translateY(-4px);
-    }
-
-    .metric {
-      font-size: 2.5rem;
-      font-weight: 700;
-      background: var(--primary-gradient);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .metric-label {
-      color: var(--text-light);
-      font-size: 0.9rem;
-      margin-top: 0.5rem;
-    }
-
-    /* Footer */
-    .footer {
-      background: var(--text-dark);
-      color: rgba(255,255,255,0.8);
-      padding: 3rem 1.5rem;
-    }
-
-    .footer a {
-      color: rgba(255,255,255,0.9);
-      transition: color 0.3s ease;
-    }
-
-    .footer a:hover {
-      color: white;
-    }
-
     /* Responsive */
     @media screen and (max-width: 768px) {
       .publication-title {
@@ -445,9 +392,6 @@
   </div>
 </section>
 
-
-
-
 <section class="section">
   <div class="container is-max-desktop">
       <div class="columns is-centered">
@@ -527,11 +471,11 @@
 </section>
 
 <section class="section">
-  <div class="container is-max-desktop">
+  <div class="container is-max-desktop tabs-wrapper">
     <h2 class="title is-3">Theoretical Analysis: The Fallibility Jitter Problem</h2>
     <hr>
     
-    <div class="tabs is-centered is-boxed" id="theory-tabs">
+    <div class="tabs is-centered is-boxed">
       <ul>
         <li class="is-active" data-tab="jitter-problem"><a>The Fallibility Jitter Problem</a></li>
         <li data-tab="sgd-analysis"><a>Analysis with SGD Optimizer</a></li>
@@ -627,17 +571,16 @@
           </div>
         </div>
       </div>
-
   </div>
 </section>
+
 <section class="section">
-  <div class="container is-max-desktop">
+  <div class="container is-max-desktop tabs-wrapper">
     <div class="columns is-centered">
       <div class="column">
         <h2 class="title is-3">Experimental Results</h2>
         <hr>
-
-        <div class="tabs is-centered is-boxed" id="results-tabs">
+        <div class="tabs is-centered is-boxed">
           <ul>
             <li class="is-active" data-tab="leaderboard"><a>Log-based Fault Diagnosis Evaluation</a></li>
             <li data-tab="qualitative"><a>Qualitative Analysis</a></li>
@@ -739,47 +682,102 @@
 </footer>
 
 <script>
-  // Tab switching functionality
-  function setupTabs(containerId) {
-    const container = document.getElementById(containerId);
-    if (!container) {
-      // Find the container by its direct parent section if ID is on the tabs div itself
-      const tabsDiv = document.querySelector('.tabs#' + containerId);
-      if (tabsDiv) {
-        container = tabsDiv.closest('.section').querySelector('.container');
-      } else {
-        return;
-      }
-    }
+  // Robust Tab switching and LaTeX rendering script
+  document.addEventListener('DOMContentLoaded', function() {
     
-    const tabs = container.querySelectorAll('.tabs li');
-    const contents = Array.from(container.querySelectorAll('.tab-content'));
+    // Function to render LaTeX in a given element
+    const renderLatex = (element) => {
+      if (window.renderMathInElement) {
+        window.renderMathInElement(element, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+          ],
+          throwOnError: false
+        });
+      }
+    };
 
-    tabs.forEach(tab => {
-      tab.addEventListener('click', function() {
-        const targetId = this.getAttribute('data-tab');
-        
-        tabs.forEach(t => t.classList.remove('is-active'));
-        this.classList.add('is-active');
-        
-        contents.forEach(content => {
-          content.classList.remove('is-active');
-          if (content.id === targetId) {
-            content.classList.add('is-active');
-          }
+    // Ensure KaTeX loaded; if not, dynamically load and then init
+    const ensureKatex = (onReady) => {
+      const isReady = () => !!window.renderMathInElement && !!window.katex;
+      if (isReady()) { onReady(); return; }
+
+      // Dynamically inject CSS (idempotent)
+      if (!document.getElementById('katex-css')) {
+        const katexCss = document.createElement('link');
+        katexCss.id = 'katex-css';
+        katexCss.rel = 'stylesheet';
+        katexCss.href = 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css';
+        document.head.appendChild(katexCss);
+      }
+
+      // Load KaTeX core, then auto-render
+      const loadScript = (src, onload) => {
+        const s = document.createElement('script');
+        s.src = src;
+        s.onload = onload;
+        s.defer = true;
+        document.head.appendChild(s);
+      };
+
+      loadScript('https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js', () => {
+        loadScript('https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js', () => {
+          onReady();
         });
       });
-    });
-  }
+    };
 
-  // Use a more robust selector for the containers of the tabs
-  document.querySelectorAll('.tabs').forEach(tabsContainer => {
-    const containerId = tabsContainer.id;
-    if(containerId) {
-        setupTabs(containerId);
-    }
+    const initMathAndTabs = () => {
+      // Initial global render to cover all static content
+      renderLatex(document.body);
+
+      // Find all distinct tab group wrappers
+      const allTabWrappers = document.querySelectorAll('.tabs-wrapper');
+      
+      allTabWrappers.forEach(wrapper => {
+        const tabs = wrapper.querySelectorAll('.tabs li');
+        const contents = wrapper.querySelectorAll('.tab-content');
+
+        // Initial render for the default active tab
+        const initialActiveTab = wrapper.querySelector('.tabs li.is-active');
+        if (initialActiveTab) {
+          const initialContentId = initialActiveTab.getAttribute('data-tab');
+          const initialContent = wrapper.querySelector('#' + initialContentId);
+          if (initialContent) {
+            renderLatex(initialContent);
+          }
+        }
+
+        // Add click listeners to switch tabs and render LaTeX
+        tabs.forEach(tab => {
+          tab.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-tab');
+            const targetContent = wrapper.querySelector('#' + targetId);
+
+            // Update active state for tabs
+            tabs.forEach(t => t.classList.remove('is-active'));
+            this.classList.add('is-active');
+
+            // Update active state for content
+            contents.forEach(content => {
+              content.classList.remove('is-active');
+            });
+            
+            if (targetContent) {
+              targetContent.classList.add('is-active');
+              // Render LaTeX on the newly visible tab content
+              renderLatex(targetContent);
+            }
+          });
+        });
+      });
+    };
+
+    ensureKatex(initMathAndTabs);
   });
-
 </script>
 
 </body>
