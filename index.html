@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description" content="Bifrost: Empowering Pretrained Language Model with Fallibility Representation for Log-based Fault Diagnosis">
+  <meta name="keywords" content="Fault Diagnosis, Log Analysis, Log Representation, Site Reliability Engineering">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bifrost: Log-based Fault Diagnosis</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="icon" href="./static/images/ca2.png">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0KOVEMeawgUFyDsFRpvvTJuQYLqtUvIcsvEczaMUtMwvWNCHJBTjF" crossorigin="anonymous">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0i8" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" integrity="sha384-+VBxd3r6XgURPl3xCuPvnHNbBALuZSFoqyno4Kscs/KkFxGLRPOrAI2U2pyLCsCk" crossorigin="anonymous"></script>
+  
+  <style>
+    :root {
+      --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      --accent-color: #667eea;
+      --text-dark: #2d3748;
+      --text-light: #718096;
+      --bg-light: #f7fafc;
+      --border-radius: 16px;
+      --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+    }
+
+    * {
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      color: var(--text-dark);
+      line-height: 1.7;
+      background: #ffffff;
+    }
+
+    /* Hero Section */
+    .hero {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)), 
+              url("./static/images/background.png"); 
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center center;
+      background-attachment: fixed;
+      padding: 9rem 1.5rem 9rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg width="60" height="60" xmlns="http://www.w3.org/2000/svg"><rect width="1" height="1" fill="rgba(255,255,255,0.1)"/></svg>');
+      opacity: 0.3;
+    }
+
+    .hero-body {
+      position: relative;
+      z-index: 1;
+    }
+
+    .publication-title {
+      color: black;
+      font-weight: 700;
+      font-size: 2.5rem;
+      line-height: 1.2;
+      margin-bottom: 1.5rem;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.15);
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(5px);
+      padding: 1rem;
+      border-radius: 12px;
+      display: inline-block;
+    }
+
+    .publication-authors {
+      color: rgba(0,0,0,0.95);
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+      background: rgba(255,255,255,0.6);
+      backdrop-filter: blur(10px);
+      padding: 1rem 2rem;
+      border-radius: 50px;
+      display: inline-block;
+    }
+
+    .publication-links {
+      margin-top: 2rem;
+    }
+
+    .link-block {
+      margin: 0 0.5rem;
+    }
+
+    .button.is-rounded {
+      border-radius: 50px;
+      padding: 0.75rem 2rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: var(--shadow-md);
+    }
+
+    .button.is-rounded:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    /* Section Styles */
+    .section {
+      padding: 4rem 1.5rem;
+    }
+
+    .section:nth-child(even) {
+      background: var(--bg-light);
+    }
+
+    .content-box {
+      background: white;
+      border-radius: var(--border-radius);
+      padding: 2.5rem;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 2rem;
+      transition: all 0.3s ease;
+    }
+
+    .content-box:hover {
+      box-shadow: var(--shadow-md);
+    }
+
+    .title.is-3 {
+      color: var(--text-dark);
+      font-weight: 700;
+      margin-bottom: 1rem;
+      position: relative;
+      display: inline-block;
+    }
+
+    .title.is-3::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 0;
+      width: 60px;
+      height: 4px;
+      background: var(--primary-gradient);
+      border-radius: 2px;
+    }
+
+    .title.is-4 {
+      color: var(--accent-color);
+      font-weight: 600;
+      margin-top: 2.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    hr {
+      border: none;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(102,126,234,0.3), transparent);
+      margin: 2rem 0;
+    }
+
+    /* Figure Styles */
+    figure {
+      margin: 2rem 0;
+    }
+
+    figure img {
+      border-radius: 12px;
+      box-shadow: var(--shadow-md);
+      transition: transform 0.3s ease;
+    }
+
+    figure img:hover {
+      transform: scale(1.02);
+    }
+
+    figcaption {
+      margin-top: 1rem;
+      color: var(--text-light);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      text-align: left;
+      padding: 0 1rem;
+    }
+
+    figcaption strong {
+      color: var(--text-dark);
+      font-weight: 600;
+    }
+
+    /* Tabs */
+    .tabs {
+      margin-bottom: 2rem;
+    }
+
+    .tabs ul {
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    .tabs li.is-active a {
+      border-bottom-color: var(--accent-color);
+      color: var(--accent-color);
+    }
+
+    .tabs a {
+      border-bottom: 2px solid transparent;
+      color: var(--text-light);
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .tabs a:hover {
+      border-bottom-color: var(--accent-color);
+      color: var(--accent-color);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.is-active {
+      display: block;
+      animation: fadeIn 0.4s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Highlight Box */
+    .highlight-box {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      border-left: 4px solid #f59e0b;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 2rem 0;
+    }
+
+    .info-box {
+      background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+      border-left: 4px solid #3b82f6;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 2rem 0;
+    }
+    
+    .error-box {
+        background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        border-left: 4px solid #ef4444;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin: 2rem 0;
+    }
+
+    .success-box {
+      background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+      border-left: 4px solid #10b981;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 2rem 0;
+    }
+    
+    /* Responsive */
+    @media screen and (max-width: 768px) {
+      .publication-title {
+        font-size: 1.75rem;
+      }
+      
+      .content-box {
+        padding: 1.5rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-1 publication-title">
+            Bifrost: Empowering Pretrained Language Model with Fallibility Representation for Log-based Fault Diagnosis
+          </h1>
+          <div class="publication-authors">
+            <span class="author-block">Anonymous Author(s)</span>
+            <br>
+            <span style="font-size: 0.9rem; opacity: 0.9;">Paper under review at ISSTA 2026</span>
+          </div>
+
+          <div class="publication-links">
+            <span class="link-block">
+              <a href="./static/papers/paper.pdf" class="external-link button is-normal is-rounded is-dark">
+                <span class="icon"><i class="fas fa-file-pdf"></i></span>
+                <span>Paper</span>
+              </a>
+            </span>
+            <span class="link-block">
+              <a href="https://anonymous.4open.science/r/Bifrost" class="external-link button is-normal is-rounded is-dark">
+                <span class="icon"><i class="fab fa-github"></i></span>
+                <span>Code</span>
+              </a>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column">
+        <h2 class="title is-3">Insight</h2>
+        <hr>
+        
+        <div class="content-box">
+          <figure>
+            <img src="./static/images/teaser.png" alt="Bifrost Overview">
+            <figcaption>
+              <strong>The SRE Experience:</strong> To diagnose system faults, Site Reliability Engineers (SREs) analyze logs at multiple levels. <strong>Bifrost</strong> is inspired by this experience, learning from the <strong>Execution Flow Level</strong> to detect anomalies, the <strong>Event Level</strong> to understand fault semantics, and the <strong>Component Level</strong> to localize issues to specific hardware or software units.
+            </figcaption>
+          </figure>
+
+          <div class="success-box">
+            <p style="font-size: 1.05rem; margin-bottom: 1rem;"><strong>Key Contributions:</strong></p>
+            <ul style="margin-bottom: 0; list-style: none; padding-left: 0;">
+              <li style="padding-left: 1.5rem; margin-bottom: 0.75rem; position: relative;">
+                <span style="position: absolute; left: 0; color: #10b981; font-weight: 700;">•</span>
+                We analyze the log analysis experience of SREs and define a new type of multi-level failure information called <strong>fallibility representations</strong>.
+              </li>
+              <li style="padding-left: 1.5rem; margin-bottom: 0.75rem; position: relative;">
+                <span style="position: absolute; left: 0; color: #10b981; font-weight: 700;">•</span>
+                We conduct an empirical study showing that existing PLMs perform poorly in encoding fallibility representations, leading to suboptimal fault diagnosis.
+              </li>
+              <li style="padding-left: 1.5rem; margin-bottom: 0.75rem; position: relative;">
+                <span style="position: absolute; left: 0; color: #10b981; font-weight: 700;">•</span>
+                We propose <strong>Bifrost</strong>, a novel representation learning method that enhances PLMs by specifically training them to learn these fallibility representations from logs.
+              </li>
+              <li style="padding-left: 1.5rem; margin-bottom: 0; position: relative;">
+                <span style="position: absolute; left: 0; color: #10b981; font-weight: 700;">•</span>
+                Extensive evaluations on four datasets show that Bifrost achieves state-of-the-art performance in anomaly detection, root cause analysis, and fault identification.
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column">
+        <h2 class="title is-3">Abstract</h2>
+        <hr>
+        
+        <div class="content-box">
+          <div class="content has-text-justified">
+            <p>
+              Log-based fault diagnosis is crucial for maintaining the reliability of web systems. Existing fault diagnosis methods use language models pre-trained on natural language (PLMs) for log representation. However, system faults are reflected in the multi-level structure of system logs.
+            </p>
+            <p>
+              PLMs pre-trained on natural language struggle to comprehensively capture multi-level fault information, failing to meet the requirements of fault diagnosis. We refer to this information as <strong>fallibility representations</strong>.
+            </p>
+            <p>
+              To address this problem, we propose a novel log representation learning method, <strong>Bifrost</strong>. It draws inspiration from the log analysis experience of Site Reliability Engineers and meticulously designs strategies based on self-supervised contrastive learning to learn the fallibility representations of logs.
+            </p>
+             <p>
+              Across three public systems and one industrial ML-as-a-Service system, the log representations produced by Bifrost outperform existing PLMs by average margins of 9.83% in F1 for anomaly detection, 18.28% in HR@k for root cause localization, and 20.88% in Macro-F1 for fault identification.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+      <div class="columns is-centered">
+          <div class="column">
+              <h2 class="title is-3">Why Existing PLMs Fail for Log-based Fault Diagnosis</h2>
+              <hr>
+              <div class="content-box">
+                  <p class="has-text-justified">
+                      Pre-trained Language Models (PLMs) are trained on natural language and excel at semantic understanding. However, they overlook the unique multi-level structure of system logs. This leads to an inability to capture crucial fault-related patterns, resulting in suboptimal performance in diagnosis tasks. Our empirical study highlights three key failures:
+                  </p>
+                  <div class="error-box">
+                    <strong>Key Failure Points of Standard PLMs:</strong>
+                    <ol style="margin: 1rem 0 0 2rem;">
+                        <li>An inability to identify unexpected execution flows.</li>
+                        <li>Insensitivity to anomalous system events.</li>
+                        <li>A failure to separate different system components.</li>
+                    </ol>
+                  </div>
+
+                  <figure>
+                      <img src="./static/images/baseline_sim.png" alt="Baseline Similarity Plot" style="width: 100%;">
+                      <figcaption>
+                          <strong>1. Failure to Identify Unexpected Flows:</strong> As shown in the table, existing PLMs consider unexpected execution flows to have a high similarity to historical ones (e.g., 88.10% Avg_Sim), indicating they cannot effectively distinguish anomalies from normal behavior.
+                      </figcaption>
+                  </figure>
+                  <hr>
+                  <div class="columns is-vcentered">
+                      <div class="column">
+                         <img src="./static/images/bert_event.png" alt="BERT Event Visualization">
+                         <img src="./static/images/bart_event.png" alt="BART Event Visualization">
+                      </div>
+                      <div class="column">
+                         <img src="./static/images/bert_component.png" alt="BERT Component Visualization">
+                         <img src="./static/images/bart_component.png" alt="BART Component Visualization">
+                      </div>
+                  </div>
+                  <figcaption>
+                      <strong>2 & 3. Failure to Discriminate Events and Components:</strong> These t-SNE plots show log representations from BERT-Base and BART-Base. On the left, normal logs (cyan) and anomalous root-cause logs (red/purple) are heavily mixed. On the right, logs from different system components are stacked together. This demonstrates that standard PLMs cannot separate these crucial fault signals in their representation space.
+                  </figcaption>
+              </div>
+          </div>
+      </div>
+  </div>
+</section>
+
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column">
+        <h2 class="title is-3">Method: Learning Fallibility Representations in System Logs</h2>
+        <hr>
+        
+        <div class="content-box">
+          <figure>
+            <img src="./static/images/pipeline.png" alt="Method Pipeline" style="width: 100%;">
+            <figcaption>
+              <strong>The Bifrost Pipeline:</strong> The process begins with raw system logs, which are fed into the Fallibility Representation Learning stage. Here, a Pretrained Language Model is fine-tuned using three novel training tasks and our CARL strategy. This produces a tuned model capable of generating high-quality log representations. These representations are then used in the Fault Diagnosis stage for downstream tasks like Anomaly Detection, Root Cause Localization, and Fault Identification.
+            </figcaption>
+          </figure>
+
+          <div class="info-box">
+            <p><strong>Learning from SRE Experience:</strong> Bifrost operationalizes the SRE workflow by designing three self-supervised contrastive learning tasks:</p>
+            <ul style="margin: 1rem 0 0 1rem;">
+                <li><strong>Execution Flow Prediction (EFP):</strong> Learns the patterns of normal system execution flows to identify deviations.</li>
+                <li><strong>Abnormal Event Discrimination (AED):</strong> Trains the model to distinguish between normal and abnormal semantics at the individual log event level.</li>
+                <li><strong>System Component Perception (SCP):</strong> Learns to create representations that are sensitive to component-specific information (e.g., GPU, disk).</li>
+            </ul>
+          </div>
+          <div class="highlight-box">
+            <p><strong>Tackling the Fallibility Jitter Problem:</strong> Jointly training these objectives leads to optimization instability due to stochastic sampling, a problem we term "Fallibility Jitter". To solve this, Bifrost introduces the <strong>Co-Anchored Fallibility Representation Learning (CARL)</strong> strategy. CARL uses real system events as anchors during training to stabilize the optimization process, ensuring robust and efficient learning.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop tabs-wrapper">
+    <h2 class="title is-3">Theoretical Analysis: The Fallibility Jitter Problem</h2>
+    <hr>
+    
+    <div class="tabs is-centered is-boxed">
+      <ul>
+        <li class="is-active" data-tab="jitter-problem"><a>The Fallibility Jitter Problem</a></li>
+        <li data-tab="sgd-analysis"><a>Analysis with SGD Optimizer</a></li>
+        <li data-tab="adam-analysis"><a>Analysis with Adam Optimizer</a></li>
+        <li data-tab="carl-analysis"><a>CARL Strategy Analysis</a></li>
+      </ul>
+    </div>
+
+    <div class="tab-content is-active" id="jitter-problem">
+      <div class="content-box">
+        <h3 class="title is-4">Identifying the Root Cause of Instability</h3>
+        <div class="content has-text-justified">
+            <p>
+                A key theoretical contribution of our work is the identification of <strong>Fallibility Jitter</strong>. This problem refers to the instability in the model's training process caused by the inherent randomness of jointly optimizing our learning objectives. In each training step, we randomly sample context logs (for EFP) and system components (for SCP). This stochastic sampling causes the calculated gradient $g_{Vanilla}$ to deviate from the "true" gradient $G_{Vanilla}$, making the optimization path noisy and unstable.
+            </p>
+            <p>
+                We quantify this deviation using the Gradient Variance, defined as the expected squared norm of the difference between the stochastic and true gradients:
+                $$ \sigma_{Vanilla}^{2}(W;l_{t})=\mathbb{E}_{\xi}[||g_{Vanilla}(W;l_{t},\xi)-G_{Vanilla}(W;l_{t})||^{2}] $$
+            </p>
+            <p>
+                Since the sampling processes are independent, this total variance can be decomposed into the sum of variances from each random source (context log sampling for EFP and component sampling for SCP):
+                $$ \sigma_{Vanilla}^{2}(W;l_{t})=\text{Var}_{l_{i}\sim \text{Uniform}(x_{t})}(g_{EFP}(W;l_{t},l_{i})) +\text{Var}_{c_{j}\sim \text{Uniform}(C)}(g_{SCP}(W;l_{t},c_{j})) $$
+            </p>
+            <p>
+                This jitter ultimately prevents the model from converging to an ideal representation space, highlighting the need for a robust learning strategy.
+            </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="sgd-analysis">
+      <div class="content-box">
+        <h3 class="title is-4">Impact on Stochastic Gradient Descent (SGD)</h3>
+        <div class="content has-text-justified">
+          <p>
+            When using a standard SGD optimizer, the fallibility jitter has a compounding effect on the model's weights. Our analysis derives an upper bound for the cumulative weight error ($E_K = W_K - W_K'$) after $K$ training steps, where $W_K$ is the ideal weight trajectory and $W_K'$ is the stochastic trajectory.
+          </p>
+          <p>
+             The final bound on the expected weight error is:
+             $$ \mathbb{E}[||E_{K}||]\le\eta\sum_{k=0}^{K-1}(1+\eta L)^{K-1-k}\mathbb{E}_{W_{k}^{\prime}}[\sigma(W_{k}^{\prime};l_{k})] $$
+          </p>
+          <p>
+            This equation shows that the gradient standard deviation $\sigma$ (the root of the variance, or "jitter") at each step is <strong>amplified and accumulated</strong> into the final weight error. The term $(1+\eta L)^{K-1-k}$ acts as an amplification factor. This means that small, single-step deviations caused by random sampling do not average out but instead build up over time, leading to a significant divergence between the model's actual parameters and the ideal parameters.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="adam-analysis">
+      <div class="content-box">
+        <h3 class="title is-4">Impact on Adam Optimizer</h3>
+        <div class="content has-text-justified">
+          <p>
+            For an adaptive optimizer like Adam, the fallibility jitter problem is more complex, as it contaminates both of its core moment estimates.
+          </p>
+          <p>
+            <strong>1. First-Moment Estimate (Momentum):</strong> The gradient noise from sampling directly introduces errors into the momentum buffer ($m_k$), causing the estimated gradient direction to be less accurate.
+          </p>
+          <p>
+            <strong>2. Second-Moment Estimate (Variance):</strong> More critically, the jitter introduces a systematic bias in the second-moment estimate ($v_k$). The expected value of the squared stochastic gradient is not equal to the squared true gradient; it is biased by the gradient variance:
+            $$ \mathbb{E}_{\xi_{k}}[g_{k}(W_{k}^{\prime})^{2}] = G_{k}(W_{k}^{\prime})^{2}+\text{diag}(\text{Var}(g_{k})) $$
+          </p>
+          <p>
+            This bias means that the optimizer consistently overestimates the variance of the gradients. This, in turn, leads to the calculation of inaccurate adaptive learning rates for each parameter, further destabilizing the training process and degrading the quality of the final representations.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-content" id="carl-analysis">
+        <div class="content-box">
+          <h3 class="title is-4">How the CARL Strategy Mitigates Jitter</h3>
+          <div class="content has-text-justified">
+            <p>
+                The <strong>Co-Anchored Fallibility Representation Learning (CARL)</strong> strategy is designed to solve the fallibility jitter problem. Our analysis shows that CARL systematically reduces weight errors through two structural mechanisms, achieving more stable and efficient learning.
+            </p>
+            <h4 class="title is-5" style="margin-top: 2rem;">1. Variance Isolation</h4>
+            <p>
+                CARL isolates the randomness introduced by sampling the context log $l_i$ into an independent, lower-weighted loss term ($\mathcal{L}_{CL}$). In the vanilla strategy, the entire EFP task depends on this random sampling. By isolating this randomness, CARL reduces its overall contribution to the total gradient variance, leading to a more stable optimization path.
+            </p>
+            <h4 class="title is-5" style="margin-top: 2rem;">2. Negative Covariance Constraint</h4>
+            <p>
+                To handle the variance from sampling system components $c_j$, CARL employs a shared negative set mechanism. This design mathematically introduces a critical <strong>negative covariance</strong> term between parts of the gradient associated with the component sampling. The total variance of the stochastic part of the gradient ($Z$) is given by:
+                $$ Var(Z) = Var(A) + Var(B) + 2Cov(A, B) $$
+            </p>
+            <p>
+                Our derivation proves that this covariance term is negative:
+                $$ Cov(A, B) = -Cov_j(g_{A,j}, g_{B,j}) < 0 $$
+            </p>
+            <p>
+                Because this covariance term is negative, it actively cancels out a portion of the variance generated by component sampling, thereby reducing the total gradient variance and stabilizing the learning process.
+            </p>
+          </div>
+        </div>
+      </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop tabs-wrapper">
+    <div class="columns is-centered">
+      <div class="column">
+        <h2 class="title is-3">Experimental Results</h2>
+        <hr>
+        <div class="tabs is-centered is-boxed">
+          <ul>
+            <li class="is-active" data-tab="leaderboard"><a>Log-based Fault Diagnosis Evaluation</a></li>
+            <li data-tab="qualitative"><a>Qualitative Analysis</a></li>
+            <li data-tab="sensitivity"><a>Sensitivity Analysis</a></li>
+            <li data-tab="ablation"><a>Ablation Study</a></li>
+          </ul>
+        </div>
+
+        <div class="tab-content is-active" id="leaderboard">
+          <div class="content-box">
+            <h3 class="title is-4">Performance on Fault Diagnosis Tasks</h3>
+            <figure>
+              <img src="./static/images/leaderboard_ad.png" alt="Anomaly Detection Results">
+              <figcaption>
+                <strong>Anomaly Detection (Table 2):</strong> Bifrost significantly outperforms small PLMs, large language models (LLMs), and log-specific models like PreLog on the Anomaly Detection task across four challenging datasets.
+              </figcaption>
+            </figure>
+            <figure>
+              <img src="./static/images/leaderboard_rca.png" alt="Root Cause Analysis Results">
+              <figcaption>
+                <strong>Root Cause Localization (Table 3):</strong> For Root Cause Analysis, Bifrost shows substantial improvements over all baselines in identifying the correct root cause logs, measured by metrics like Hit Rate (HR@k) and Mean Reciprocal Rank (MRR).
+              </figcaption>
+            </figure>
+            <figure>
+              <img src="./static/images/leaderboard_fi.png" alt="Fault Identification Results">
+              <figcaption>
+                <strong>Fault Identification (Table 4):</strong> On the Fault Identification task with the industrial Platform-X dataset, Bifrost achieves a large advantage, demonstrating its superior ability to correctly classify different fault types.
+              </figcaption>
+            </figure>
+          </div>
+        </div>
+
+        <div class="tab-content" id="qualitative">
+          <div class="content-box">
+            <h3 class="title is-4">Bifrost Effectively Encodes Fallibility</h3>
+            <figure>
+              <img src="./static/images/bifrost_sim.png" alt="Bifrost Similarity" style="width: 100%;">
+              <figcaption>
+                <strong>Identifying Unexpected Flows (Figure 5):</strong> Unlike baselines, Bifrost correctly assigns low similarity (Avg_Sim) and high rank distance (Avg_Rank) to unexpected execution flows, demonstrating its ability to learn normal execution patterns and spot deviations.
+              </figcaption>
+            </figure>
+             <figure>
+                <div class="columns is-vcentered">
+                    <div class="column">
+                       <img src="./static/images/bifrost_event.png" alt="Bifrost Event Visualization">
+                    </div>
+                    <div class="column">
+                       <img src="./static/images/bifrost_component.png" alt="Bifrost Component Visualization">
+                    </div>
+                </div>
+              <figcaption>
+                <strong>Separating Events and Components (Figure 6):</strong> The representations learned by Bifrost show clear separation. On the left, anomalous events form distinct clusters away from normal logs. On the right, logs from different system components are well-separated, showcasing Bifrost's awareness of system structure.
+              </figcaption>
+            </figure>
+          </div>
+        </div>
+
+        <div class="tab-content" id="sensitivity">
+          <div class="content-box">
+            <h3 class="title is-4">Robustness to Supervision Proxy Size</h3>
+            <div class="content has-text-justified">
+              <p>
+                This analysis examines the sensitivity of Bifrost to the size K of the system failure corpus, which provides failure phrases for contrastive negative synthesis in fallibility representation learning. We vary K while keeping other settings unchanged.
+              </p>
+            </div>
+            <figure>
+              <img src="./static/images/sensitivity_ad.png" alt="Sensitivity Analysis AD" style="width: 100%;">
+              <figcaption>
+                <strong>Sensitivity on Anomaly Detection:</strong> Bifrost demonstrates robust performance across a wide range of corpus sizes. AD fluctuates mildly with an average span of no more than 2.16% across datasets.
+              </figcaption>
+            </figure>
+            <figure>
+              <img src="./static/images/sensitivity_rca.png" alt="Sensitivity Analysis RCA" style="width: 100%;">
+              <figcaption>
+                <strong>Sensitivity on Root Cause Localization:</strong> RCL shows higher sensitivity with an average span of about 5.64%, suggesting that root-cause ranking benefits more from richer failure cues. Performance gains saturate when K increases beyond the default setting.
+              </figcaption>
+            </figure>
+            <figure>
+              <img src="./static/images/sensitivity_fi.png" alt="Sensitivity Analysis FI" style="width: 100%;">
+              <figcaption>
+                <strong>Sensitivity on Fault Identification:</strong> FI remains stable within a narrow band on Platform-X, with a span of about 1.08%, demonstrating consistent performance across different corpus sizes.
+              </figcaption>
+            </figure>
+            <div class="info-box" style="margin-top: 2rem;">
+              <p><strong>Key Findings:</strong> Bifrost is robust to a wide range of corpus sizes and does not rely on finely tuned parameters. When K is overly small (e.g., decreasing from 10 to 4), performance consistently degrades: AD drops by 0.71% to 2.01%, and RCL drops by 3.56% to 5.23%. The model achieves stable fallibility learning and exhibits diminishing returns as more failure phrases are introduced beyond the default setting.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-content" id="ablation">
+          <div class="content-box">
+            <h3 class="title is-4">Contribution of Bifrost's Components</h3>
+             <div class="success-box" style="margin-top: 2rem;">
+               <p><strong>Key Findings:</strong> The ablation of all training strategies resulted in varying degrees of performance degradation across all tasks. This demonstrates the effectiveness of the three distinct learning objectives (EFP, AED, SCP) and the crucial role of the CARL learning strategy in mitigating the "fallibility jitter" problem to produce higher-quality log representations.</p>
+             </div>
+            <figure>
+              <img src="./static/images/ablation_ad.png" alt="Ablation AD" style="width: 100%;">
+              <figcaption>
+                <strong>Ablation on Anomaly Detection (Table 5):</strong> Removing any single learning objective or the CARL strategy leads to a clear drop in F1-Score across all four datasets. The complete model consistently performs the best.
+              </figcaption>
+            </figure>
+             <figure>
+              <img src="./static/images/ablation_rca.png" alt="Ablation RCA" style="width: 100%;">
+              <figcaption>
+                <strong>Ablation on Root Cause Localization (Table 6):</strong> Results show that each component is crucial for accurately localizing faults. Performance drops significantly when key parts of the training process, especially CARL, are removed.
+              </figcaption>
+            </figure>
+             <figure>
+              <img src="./static/images/ablation_fi.png" alt="Ablation FI" style="width: 100%;">
+              <figcaption>
+                <strong>Ablation on Fault Identification (Table 7):</strong> The ablation study on the Platform-X dataset confirms that the full Bifrost model, including all three objectives and the CARL strategy, is necessary for achieving the best fault classification performance.
+              </figcaption>
+            </figure>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <div class="content has-text-centered">
+      <p>
+        This website template is borrowed from <a href="https://github.com/nerfies/nerfies.github.io">NeRFies</a>.
+      </p>
+      <p style="margin-top: 1rem; opacity: 0.7; font-size: 0.9rem;">
+        © 2026 Anonymous Authors.
+      </p>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Robust Tab switching and LaTeX rendering script
+  document.addEventListener('DOMContentLoaded', function() {
+    
+    // Function to render LaTeX in a given element
+    const renderLatex = (element) => {
+      if (window.renderMathInElement) {
+        window.renderMathInElement(element, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+          ],
+          throwOnError: false
+        });
+      }
+    };
+
+    // Ensure KaTeX loaded; if not, dynamically load and then init
+    const ensureKatex = (onReady) => {
+      const isReady = () => !!window.renderMathInElement && !!window.katex;
+      if (isReady()) { onReady(); return; }
+
+      // Dynamically inject CSS (idempotent)
+      if (!document.getElementById('katex-css')) {
+        const katexCss = document.createElement('link');
+        katexCss.id = 'katex-css';
+        katexCss.rel = 'stylesheet';
+        katexCss.href = 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css';
+        document.head.appendChild(katexCss);
+      }
+
+      // Load KaTeX core, then auto-render
+      const loadScript = (src, onload) => {
+        const s = document.createElement('script');
+        s.src = src;
+        s.onload = onload;
+        s.defer = true;
+        document.head.appendChild(s);
+      };
+
+      loadScript('https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js', () => {
+        loadScript('https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js', () => {
+          onReady();
+        });
+      });
+    };
+
+    const initMathAndTabs = () => {
+      // Initial global render to cover all static content
+      renderLatex(document.body);
+
+      // Find all distinct tab group wrappers
+      const allTabWrappers = document.querySelectorAll('.tabs-wrapper');
+      
+      allTabWrappers.forEach(wrapper => {
+        const tabs = wrapper.querySelectorAll('.tabs li');
+        const contents = wrapper.querySelectorAll('.tab-content');
+
+        // Initial render for the default active tab
+        const initialActiveTab = wrapper.querySelector('.tabs li.is-active');
+        if (initialActiveTab) {
+          const initialContentId = initialActiveTab.getAttribute('data-tab');
+          const initialContent = wrapper.querySelector('#' + initialContentId);
+          if (initialContent) {
+            renderLatex(initialContent);
+          }
+        }
+
+        // Add click listeners to switch tabs and render LaTeX
+        tabs.forEach(tab => {
+          tab.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-tab');
+            const targetContent = wrapper.querySelector('#' + targetId);
+
+            // Update active state for tabs
+            tabs.forEach(t => t.classList.remove('is-active'));
+            this.classList.add('is-active');
+
+            // Update active state for content
+            contents.forEach(content => {
+              content.classList.remove('is-active');
+            });
+            
+            if (targetContent) {
+              targetContent.classList.add('is-active');
+              // Render LaTeX on the newly visible tab content
+              renderLatex(targetContent);
+            }
+          });
+        });
+      });
+    };
+
+    ensureKatex(initMathAndTabs);
+  });
+</script>
+
+</body>
+</html>
