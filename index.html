@@ -322,6 +322,116 @@
   </div>
 </section>
 
+<section class="section" style="background: linear-gradient(135deg, #fef9c3 0%, #fef3c7 100%); border-bottom: 3px solid #f59e0b;">
+  <div class="container is-max-desktop tabs-wrapper">
+    <div class="columns is-centered">
+      <div class="column">
+        <h2 class="title is-3">Supplementary Material for ASE 2026</h2>
+        <hr>
+        <div class="highlight-box" style="margin-bottom: 2rem;">
+          <p><strong>Note:</strong> This section provides additional experimental details referenced in our rebuttal responses. Each analysis corresponds to a specific reviewer question.</p>
+        </div>
+
+        <div class="tabs is-centered is-boxed">
+          <ul>
+            <li class="is-active" data-tab="ra-q2"><a>Lexicon Independence (R-A Q2)</a></li>
+            <li data-tab="rb-q1"><a>LLM Comparison (R-B Q1)</a></li>
+            <li data-tab="rc-q2"><a>Cross-Dataset Transfer (R-C Q2)</a></li>
+          </ul>
+        </div>
+
+        <!-- Tab 1: RA_Q2 Lexicon Independence -->
+        <div class="tab-content is-active" id="ra-q2">
+          <div class="content-box">
+            <h3 class="title is-4">Does EFP Learn Flow Patterns or Merely Lexical Cues?</h3>
+            <div class="content has-text-justified">
+              <div class="info-box">
+                <p><strong>Motivation:</strong> A natural concern is whether Execution Flow Prediction (EFP) relies on detecting specific fault-related words in the log data, rather than genuinely learning anomalous flow patterns from historical context. If EFP depends on lexical shortcuts, removing all overlapping phrases between the fault lexicon and the log data should cause catastrophic performance failure.</p>
+              </div>
+              <p>
+                <strong>Experimental Design:</strong> We filter the fault lexicon to retain only phrases that <em>never</em> occur in any log entry across all datasets. Out of the original 30 phrases, only 9 pass this strict filter. Under this setting, no lexical shortcut is possible because the training phrases are entirely absent from the data. We then re-train Bifrost using only these 9 non-overlapping phrases and evaluate on all downstream tasks.
+              </p>
+              <figure>
+                <img src="./static/images/RA_Q2.png" alt="Lexicon Independence Analysis" style="width: 100%;">
+                <figcaption>
+                  <strong>Results:</strong> Performance comparison between full Bifrost (30 phrases) and Bifrost-Dedup (9 non-overlapping phrases only). Despite using only 9 phrases with zero lexical overlap with the log data, Bifrost maintains competitive performance with less than 4% F1 decline on AD and less than 1% on FI.
+                </figcaption>
+              </figure>
+              <div class="success-box">
+                <p><strong>Key Findings:</strong></p>
+                <ul style="margin: 0.5rem 0 0 1.5rem;">
+                  <li>If EFP relied on lexical shortcuts, this setting would cause catastrophic failure, since the training phrases are entirely absent from the data. The modest decline confirms that EFP's learning signal comes from the sequence model predicting the next event based on historical context, not from detecting specific lexical items.</li>
+                  <li>The observed performance decrease is attributable to reduced negative diversity (9 vs. 30 phrases), not the loss of lexical cues. Fewer phrases provide less diverse contrastive negatives, slightly reducing the richness of the learned representation.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: RB_Q1 LLM Comparison -->
+        <div class="tab-content" id="rb-q1">
+          <div class="content-box">
+            <h3 class="title is-4">Comparison with LLM-based Log Diagnosis</h3>
+            <div class="content has-text-justified">
+              <div class="info-box">
+                <p><strong>Motivation:</strong> LLM-based diagnosis and log representation learning target different paradigms. LLMs perform end-to-end reasoning over raw log text, while Bifrost focuses on learning high-quality representations that can serve multiple downstream tasks. Nevertheless, we provide an empirical comparison to contextualize Bifrost's effectiveness relative to LLM-based approaches.</p>
+              </div>
+              <p>
+                <strong>Comparison Target:</strong> We compare with <strong>AdaptiveLog</strong> (TOSEM 2025), a representative LLM-based log diagnosis method that leverages the collaboration of large and small language models. We use Qwen3-8B as the backbone LLM, following its recommended configuration. The comparison covers all three downstream tasks (AD, RCL, FI) across four datasets.
+              </p>
+              <figure>
+                <img src="./static/images/RB_Q1.png" alt="LLM Comparison Results" style="width: 100%;">
+                <figcaption>
+                  <strong>Results:</strong> Performance and efficiency comparison between Bifrost and AdaptiveLog (with Qwen3-8B) across four datasets and three tasks. Bifrost achieves substantially higher performance while requiring approximately 11x less inference time.
+                </figcaption>
+              </figure>
+              <div class="success-box">
+                <p><strong>Key Findings:</strong></p>
+                <ul style="margin: 0.5rem 0 0 1.5rem;">
+                  <li>Bifrost outperforms AdaptiveLog by approximately 10% F1 on AD, 13% HR@k on RCL, and 21% Macro-F1 on FI, averaged across all four datasets.</li>
+                  <li>Bifrost achieves approximately 11x inference speedup compared to the LLM-based approach, making it significantly more practical for production deployment.</li>
+                  <li>These results validate that high-quality, task-aware log representations can be more effective than end-to-end LLM reasoning for fault diagnosis, while being far more efficient.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 3: RC_Q2 Cross-Dataset Transfer -->
+        <div class="tab-content" id="rc-q2">
+          <div class="content-box">
+            <h3 class="title is-4">Cross-Dataset Transferability of Fallibility Representations</h3>
+            <div class="content has-text-justified">
+              <div class="info-box">
+                <p><strong>Motivation:</strong> While this paper focuses on learning fallibility representations within a target system, we investigate whether the learned representations can transfer meaningfully across different systems. This examines whether Bifrost captures general fallibility patterns rather than system-specific artifacts.</p>
+              </div>
+              <p>
+                <strong>Experimental Design:</strong> We train Bifrost exclusively on BGL (a supercomputer system) and evaluate the resulting representations on all other datasets (Hadoop, Thunderbird, Platform-X) without any target-system fine-tuning. We compare against vanilla BART-Base (without any fallibility training) and the standard target-system Bifrost to measure the transfer gap.
+              </p>
+              <figure>
+                <img src="./static/images/RC_Q2.png" alt="Cross-Dataset Transfer Results" style="width: 100%;">
+                <figcaption>
+                  <strong>Results:</strong> Cross-dataset transfer performance. Bifrost trained only on BGL significantly outperforms vanilla BART-Base across all scenarios, with a modest gap compared to target-system training.
+                </figcaption>
+              </figure>
+              <div class="success-box">
+                <p><strong>Key Findings:</strong></p>
+                <ul style="margin: 0.5rem 0 0 1.5rem;">
+                  <li>Bifrost trained solely on BGL significantly outperforms vanilla BART-Base in all cross-dataset scenarios (e.g., +10% F1 on AD for Hadoop and Platform-X, +17% HR@k on RCL for Thunderbird), demonstrating that the learned fallibility representations transfer meaningfully across systems.</li>
+                  <li>Compared to target-system training, cross-system transfer shows a modest average gap of approximately 4.6% F1 on AD and 2.6% Macro-F1 on FI.</li>
+                  <li>Transfer to the production system (Platform-X) is particularly effective, with gaps of less than 3% across all tasks, suggesting strong practical applicability.</li>
+                  <li>Target-system training requires only unlabeled normal logs and completes within a few GPU-hours, posing minimal deployment overhead when available.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="section">
   <div class="container is-max-desktop">
     <div class="columns is-centered">
